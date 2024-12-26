@@ -1,6 +1,6 @@
 {
-  "bot_id": null,
-  "outer_chat_id": null,
+  "bot_id": "",
+  "chats_ids": [],
   "trigger_tag": "#изменение_модели\n",
   "response_types": {
     "emoji": true,
