@@ -67,7 +67,7 @@
 Дождитесь создания образа. Затем запустите контейнер с помощью команды:
 
 ```
-docker run fis_model_telegram_bot
+>>> docker run fis_model_telegram_bot
 ```
 
 Готово!
