@@ -9,8 +9,6 @@ with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/app_settings.js
 
 bot = telebot.TeleBot(settings['bot_id'])
 
-print('FISModelBot is running.')
-
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
   bot.send_message(message.chat.id, settings['response_messages']['start_message'])
