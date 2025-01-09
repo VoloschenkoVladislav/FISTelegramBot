@@ -2,7 +2,7 @@ import telebot
 from telebot.types import ReactionTypeEmoji
 import os
 import json
-from utils import get_thread_id, is_reciever, is_forwarder, can_control_bot
+from utils import get_thread_id, is_reciever, is_forwarder, can_control_bot, is_superuser, is_default_superuser
 
 
 if not os.path.exists(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json'):
@@ -15,8 +15,28 @@ with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.j
   try:
     chat_settings = json.load(chat_settings_file)
   except json.decoder.JSONDecodeError:
-    json.dump({'recievers': [], 'forwarders': []}, chat_settings_file)
-    chat_settings = json.loads('{"recievers": [], "forwarders": []}')
+    json.dump({'recievers': [], 'forwarders': [], 'superuser_ids': settings['default_superuser_ids']}, chat_settings_file)
+    chat_settings = json.loads('{"recievers": [], "forwarders": [], "superuser_ids": ' + str(settings['default_superuser_ids']) + '}')
+
+keyErr = False
+try:
+  chat_settings['recievers']
+except KeyError:
+  chat_settings['recievers'] = []
+  keyErr = True
+try:
+  chat_settings['forwarders']
+except KeyError:
+  chat_settings['forwarders'] = []
+  keyErr = True
+try:
+  chat_settings['superuser_ids']
+except KeyError:
+  chat_settings['superuser_ids'] = settings['default_superuser_ids']
+  keyErr = True
+if keyErr:
+  with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+    json.dump(chat_settings, chat_settings_file)
 
 
 bot = telebot.TeleBot(settings['bot_id'])
@@ -37,8 +57,7 @@ def status(message):
 @bot.message_handler(commands=['enable_recieve'])
 def enable_recieve(message):
   thread_id = get_thread_id(message)
-  if can_control_bot(message, settings):
-
+  if can_control_bot(message, settings, chat_settings):
     if is_reciever(message, chat_settings):
       bot.send_message(
         message.chat.id,
@@ -68,8 +87,7 @@ def enable_recieve(message):
 @bot.message_handler(commands=['disable_recieve'])
 def disable_recieve(message):
   thread_id = get_thread_id(message)
-  if can_control_bot(message, settings):
-
+  if can_control_bot(message, settings, chat_settings):
     if not is_reciever(message, chat_settings):
       bot.send_message(
         message.chat.id,
@@ -99,8 +117,7 @@ def disable_recieve(message):
 @bot.message_handler(commands=['enable_forward'])
 def enable_forward(message):
   thread_id = get_thread_id(message)
-  if can_control_bot(message, settings):
-
+  if can_control_bot(message, settings, chat_settings):
     if is_forwarder(message, chat_settings):
       bot.send_message(message.chat.id, settings['response_messages']['already_in_forwarders'], message_thread_id = thread_id)
     else:
@@ -126,7 +143,7 @@ def enable_forward(message):
 @bot.message_handler(commands=['disable_forward'])
 def disable_forward(message):
   thread_id = get_thread_id(message)
-  if can_control_bot(message, settings):
+  if can_control_bot(message, settings, chat_settings):
 
     if not is_forwarder(message, chat_settings):
       bot.send_message(
@@ -146,6 +163,99 @@ def disable_forward(message):
         settings['response_messages']['excluded_from_forwarders'],
         message_thread_id = thread_id
       )
+  else:
+    bot.send_message(
+      message.chat.id,
+      settings['response_messages']['not_enough_rights'],
+      message_thread_id = thread_id
+    )
+
+
+@bot.message_handler(commands=['add_superuser'])
+def add_superuser(message):
+  thread_id = get_thread_id(message)
+  if can_control_bot(message, settings, chat_settings):
+    try:
+      new_superuser_id = int(message.text.split()[1:][0])
+    except ValueError:
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['invalid_superuser_id'],
+        message_thread_id = thread_id
+      )
+      return
+    except IndexError:
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['user_is_not_specified'],
+        message_thread_id = thread_id
+      )
+      return
+    if is_superuser(new_superuser_id, chat_settings):
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['already_superuser'],
+        message_thread_id = thread_id
+      )
+    else:
+      chat_settings['superuser_ids'].append(new_superuser_id)
+      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+        json.dump(chat_settings, chat_settings_file)
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['added_to_superusers'],
+        message_thread_id = thread_id
+      )
+  else:
+    bot.send_message(
+      message.chat.id,
+      settings['response_messages']['not_enough_rights'],
+      message_thread_id = thread_id
+    )
+
+
+@bot.message_handler(commands=['remove_superuser'])
+def remove_superuser(message):
+  thread_id = get_thread_id(message)
+  if can_control_bot(message, settings, chat_settings):
+    try:
+      superuser_to_delete_id = int(message.text.split()[1:][0])
+    except ValueError:
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['invalid_superuser_id'],
+        message_thread_id = thread_id
+      )
+      return
+    except IndexError:
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['user_is_not_specified'],
+        message_thread_id = thread_id
+      )
+      return
+    if not is_superuser(superuser_to_delete_id, chat_settings):
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['already_not_superuser'],
+        message_thread_id = thread_id
+      )
+    else:
+      if not is_default_superuser(superuser_to_delete_id, settings):
+        chat_settings['superuser_ids'].remove(superuser_to_delete_id)
+        with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+          json.dump(chat_settings, chat_settings_file)
+        bot.send_message(
+          message.chat.id,
+          settings['response_messages']['removed_from_superusers'],
+          message_thread_id = thread_id
+        )
+      else:
+        bot.send_message(
+          message.chat.id,
+          settings['response_messages']['cannot_remove_default_superuser'],
+          message_thread_id = thread_id
+        )
   else:
     bot.send_message(
       message.chat.id,

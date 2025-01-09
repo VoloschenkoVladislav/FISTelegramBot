@@ -25,11 +25,31 @@ def is_forwarder(message, chat_settings):
       return True
   return False
 
-def can_control_bot(message, settings):
+def can_control_bot(message, settings, chat_settings):
   try:
     if (
-      message.from_user.id in settings['superuser_ids']
+      message.from_user.id in chat_settings['superuser_ids']
       or not settings['superuser_access']
+    ):
+      return True
+  except:
+    return False
+  return False
+
+def is_superuser(user_id, chat_settings):
+  try:
+    if (
+      user_id in chat_settings['superuser_ids']
+    ):
+      return True
+  except:
+    return False
+  return False
+
+def is_default_superuser(user_id, settings):
+  try:
+    if (
+      user_id in settings['default_superuser_ids']
     ):
       return True
   except:
