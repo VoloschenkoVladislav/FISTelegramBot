@@ -8,7 +8,8 @@ from utils import (
   is_forwarder,
   can_control_bot,
   is_superuser,
-  is_default_superuser
+  is_default_superuser,
+  update_chat_settings
 )
 
 
@@ -62,12 +63,7 @@ except KeyError:
   chat_settings['superuser_ids'] = settings['default_superuser_ids']
   keyErr = True
 if keyErr:
-  with open(
-    os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
-    'w',
-    encoding = 'utf-8'
-  ) as chat_settings_file:
-    json.dump(chat_settings, chat_settings_file)
+  update_chat_settings(chat_settings)
 
 
 bot = telebot.TeleBot(settings['bot_id'])
@@ -108,12 +104,7 @@ def enable_recieve(message):
         'chat_id': message.chat.id,
         'thread_id': thread_id
       })
-      with open(
-        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
-        'w',
-        encoding = 'utf-8'
-      ) as chat_settings_file:
-        json.dump(chat_settings, chat_settings_file)
+      update_chat_settings(chat_settings)
       bot.send_message(
         message.chat.id,
         settings['response_messages']['added_to_recievers'],
@@ -142,12 +133,7 @@ def disable_recieve(message):
         'chat_id': message.chat.id,
         'thread_id': thread_id
       })
-      with open(
-        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
-        'w',
-        encoding = 'utf-8'
-      ) as chat_settings_file:
-        json.dump(chat_settings, chat_settings_file)
+      update_chat_settings(chat_settings)
       bot.send_message(
         message.chat.id,
         settings['response_messages']['excluded_from_recievers'],
@@ -176,12 +162,7 @@ def enable_forward(message):
         'chat_id': message.chat.id,
         'thread_id': thread_id
       })
-      with open(
-        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
-        'w',
-        encoding = 'utf-8'
-      ) as chat_settings_file:
-        json.dump(chat_settings, chat_settings_file)
+      update_chat_settings(chat_settings)
       bot.send_message(
         message.chat.id,
         settings['response_messages']['added_to_forwarders'],
@@ -211,12 +192,7 @@ def disable_forward(message):
         'chat_id': message.chat.id,
         'thread_id': thread_id
       })
-      with open(
-        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
-        'w',
-        encoding = 'utf-8'
-      ) as chat_settings_file:
-        json.dump(chat_settings, chat_settings_file)
+      update_chat_settings(chat_settings)
       bot.send_message(
         message.chat.id,
         settings['response_messages']['excluded_from_forwarders'],
@@ -258,12 +234,7 @@ def add_superuser(message):
       )
     else:
       chat_settings['superuser_ids'].append(new_superuser_id)
-      with open(
-        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
-        'w',
-        encoding = 'utf-8'
-      ) as chat_settings_file:
-        json.dump(chat_settings, chat_settings_file)
+      update_chat_settings(chat_settings)
       bot.send_message(
         message.chat.id,
         settings['response_messages']['added_to_superusers'],
@@ -306,12 +277,7 @@ def remove_superuser(message):
     else:
       if not is_default_superuser(superuser_to_delete_id, settings):
         chat_settings['superuser_ids'].remove(superuser_to_delete_id)
-        with open(
-          os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
-          'w',
-          encoding = 'utf-8'
-        ) as chat_settings_file:
-          json.dump(chat_settings, chat_settings_file)
+        update_chat_settings(chat_settings)
         bot.send_message(
           message.chat.id,
           settings['response_messages']['removed_from_superusers'],

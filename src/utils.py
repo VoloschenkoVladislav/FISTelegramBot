@@ -1,3 +1,7 @@
+import os
+import json
+
+
 def get_thread_id(message):
   try:
     thread_id = message.reply_to_message.message_thread_id
@@ -55,3 +59,11 @@ def is_default_superuser(user_id, settings):
   except:
     return False
   return False
+
+def update_chat_settings(chat_settings):
+  with open(
+    os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+    'w',
+    encoding = 'utf-8'
+  ) as chat_settings_file:
+    json.dump(chat_settings, chat_settings_file)
