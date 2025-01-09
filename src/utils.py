@@ -24,3 +24,14 @@ def is_forwarder(message, chat_settings):
     ):
       return True
   return False
+
+def can_control_bot(message, settings):
+  try:
+    if (
+      message.from_user.id in settings['superuser_ids']
+      or not settings['superuser_access']
+    ):
+      return True
+  except:
+    return False
+  return False

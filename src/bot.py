@@ -2,7 +2,7 @@ import telebot
 from telebot.types import ReactionTypeEmoji
 import os
 import json
-from utils import get_thread_id, is_reciever, is_forwarder
+from utils import get_thread_id, is_reciever, is_forwarder, can_control_bot
 
 
 if not os.path.exists(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json'):
@@ -37,23 +37,30 @@ def status(message):
 @bot.message_handler(commands=['enable_recieve'])
 def enable_recieve(message):
   thread_id = get_thread_id(message)
+  if can_control_bot(message, settings):
 
-  if is_reciever(message, chat_settings):
-    bot.send_message(
-      message.chat.id,
-      settings['response_messages']['already_in_recievers'],
-      message_thread_id = thread_id
-    )
+    if is_reciever(message, chat_settings):
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['already_in_recievers'],
+        message_thread_id = thread_id
+      )
+    else:
+      chat_settings['recievers'].append({
+        'chat_id': message.chat.id,
+        'thread_id': thread_id
+      })
+      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+        json.dump(chat_settings, chat_settings_file)
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['added_to_recievers'],
+        message_thread_id = thread_id
+      )
   else:
-    chat_settings['recievers'].append({
-      'chat_id': message.chat.id,
-      'thread_id': thread_id
-    })
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
-      json.dump(chat_settings, chat_settings_file)
     bot.send_message(
       message.chat.id,
-      settings['response_messages']['added_to_recievers'],
+      settings['response_messages']['not_enough_rights'],
       message_thread_id = thread_id
     )
 
@@ -61,23 +68,30 @@ def enable_recieve(message):
 @bot.message_handler(commands=['disable_recieve'])
 def disable_recieve(message):
   thread_id = get_thread_id(message)
+  if can_control_bot(message, settings):
 
-  if not is_reciever(message, chat_settings):
-    bot.send_message(
-      message.chat.id,
-      settings['response_messages']['already_excluded_from_recievers'],
-      message_thread_id = thread_id
-    )
+    if not is_reciever(message, chat_settings):
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['already_excluded_from_recievers'],
+        message_thread_id = thread_id
+      )
+    else:
+      chat_settings['recievers'].remove({
+        'chat_id': message.chat.id,
+        'thread_id': thread_id
+      })
+      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+        json.dump(chat_settings, chat_settings_file)
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['excluded_from_recievers'],
+        message_thread_id = thread_id
+      )
   else:
-    chat_settings['recievers'].remove({
-      'chat_id': message.chat.id,
-      'thread_id': thread_id
-    })
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
-      json.dump(chat_settings, chat_settings_file)
     bot.send_message(
       message.chat.id,
-      settings['response_messages']['excluded_from_recievers'],
+      settings['response_messages']['not_enough_rights'],
       message_thread_id = thread_id
     )
 
@@ -85,19 +99,26 @@ def disable_recieve(message):
 @bot.message_handler(commands=['enable_forward'])
 def enable_forward(message):
   thread_id = get_thread_id(message)
+  if can_control_bot(message, settings):
 
-  if is_forwarder(message, chat_settings):
-    bot.send_message(message.chat.id, settings['response_messages']['already_in_forwarders'], message_thread_id = thread_id)
+    if is_forwarder(message, chat_settings):
+      bot.send_message(message.chat.id, settings['response_messages']['already_in_forwarders'], message_thread_id = thread_id)
+    else:
+      chat_settings['forwarders'].append({
+        'chat_id': message.chat.id,
+        'thread_id': thread_id
+      })
+      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+        json.dump(chat_settings, chat_settings_file)
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['added_to_forwarders'],
+        message_thread_id = thread_id
+      )
   else:
-    chat_settings['forwarders'].append({
-      'chat_id': message.chat.id,
-      'thread_id': thread_id
-    })
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
-      json.dump(chat_settings, chat_settings_file)
     bot.send_message(
       message.chat.id,
-      settings['response_messages']['added_to_forwarders'],
+      settings['response_messages']['not_enough_rights'],
       message_thread_id = thread_id
     )
 
@@ -105,23 +126,30 @@ def enable_forward(message):
 @bot.message_handler(commands=['disable_forward'])
 def disable_forward(message):
   thread_id = get_thread_id(message)
+  if can_control_bot(message, settings):
 
-  if not is_forwarder(message, chat_settings):
-    bot.send_message(
-      message.chat.id,
-      settings['response_messages']['already_excluded_from_forwarders'],
-      message_thread_id = thread_id
-    )
+    if not is_forwarder(message, chat_settings):
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['already_excluded_from_forwarders'],
+        message_thread_id = thread_id
+      )
+    else:
+      chat_settings['forwarders'].remove({
+        'chat_id': message.chat.id,
+        'thread_id': thread_id
+      })
+      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+        json.dump(chat_settings, chat_settings_file)
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['excluded_from_forwarders'],
+        message_thread_id = thread_id
+      )
   else:
-    chat_settings['forwarders'].remove({
-      'chat_id': message.chat.id,
-      'thread_id': thread_id
-    })
-    with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
-      json.dump(chat_settings, chat_settings_file)
     bot.send_message(
       message.chat.id,
-      settings['response_messages']['excluded_from_forwarders'],
+      settings['response_messages']['not_enough_rights'],
       message_thread_id = thread_id
     )
 
