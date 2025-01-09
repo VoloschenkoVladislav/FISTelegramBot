@@ -2,21 +2,48 @@ import telebot
 from telebot.types import ReactionTypeEmoji
 import os
 import json
-from utils import get_thread_id, is_reciever, is_forwarder, can_control_bot, is_superuser, is_default_superuser
+from utils import (
+  get_thread_id,
+  is_reciever,
+  is_forwarder,
+  can_control_bot,
+  is_superuser,
+  is_default_superuser
+)
 
 
-if not os.path.exists(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json'):
-  with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w'): pass
+if not os.path.exists(
+  os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json'
+):
+  with open(
+    os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w'
+  ): pass
 
-with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/app_settings.json', encoding = 'utf-8') as settings_file:
+with open(
+  os.path.dirname(os.path.abspath(__file__)) + '/../conf/app_settings.json',
+  encoding = 'utf-8'
+) as settings_file:
   settings = json.load(settings_file)
 
-with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'r+', encoding = 'utf-8') as chat_settings_file:
+with open(
+  os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+  'r+',
+  encoding = 'utf-8'
+) as chat_settings_file:
   try:
     chat_settings = json.load(chat_settings_file)
   except json.decoder.JSONDecodeError:
-    json.dump({'recievers': [], 'forwarders': [], 'superuser_ids': settings['default_superuser_ids']}, chat_settings_file)
-    chat_settings = json.loads('{"recievers": [], "forwarders": [], "superuser_ids": ' + str(settings['default_superuser_ids']) + '}')
+    json.dump(
+      {
+        'recievers': [],
+        'forwarders': [],
+        'superuser_ids': settings['default_superuser_ids']
+      },
+      chat_settings_file
+    )
+    chat_settings = json.loads(
+      '{"recievers": [], "forwarders": [], "superuser_ids": ' + str(settings['default_superuser_ids']) + '}'
+    )
 
 keyErr = False
 try:
@@ -35,7 +62,11 @@ except KeyError:
   chat_settings['superuser_ids'] = settings['default_superuser_ids']
   keyErr = True
 if keyErr:
-  with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+  with open(
+    os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+    'w',
+    encoding = 'utf-8'
+  ) as chat_settings_file:
     json.dump(chat_settings, chat_settings_file)
 
 
@@ -44,14 +75,22 @@ bot = telebot.TeleBot(settings['bot_id'])
 
 @bot.message_handler(commands=['start', 'help'])
 def send_welcome(message):
-  bot.send_message(message.chat.id, settings['response_messages']['start_message'], message_thread_id = get_thread_id(message))
+  bot.send_message(
+    message.chat.id,
+    settings['response_messages']['start_message'],
+    message_thread_id = get_thread_id(message)
+  )
 
 
 @bot.message_handler(commands=['status'])
 def status(message):
   reciever_status = 'вкл. ⬇️' if is_reciever(message, chat_settings) else 'выкл. ⏸'
   forwarder_status = 'вкл. ⬆️' if is_forwarder(message, chat_settings) else 'выкл. ⏸'
-  bot.send_message(message.chat.id, 'Статус чата:\nОтправка сообщений ' + forwarder_status + '\nПриём сообщений ' + reciever_status, message_thread_id = get_thread_id(message))
+  bot.send_message(
+    message.chat.id,
+    'Статус чата:\nОтправка сообщений ' + forwarder_status + '\nПриём сообщений ' + reciever_status,
+    message_thread_id = get_thread_id(message)
+  )
 
 
 @bot.message_handler(commands=['enable_recieve'])
@@ -69,7 +108,11 @@ def enable_recieve(message):
         'chat_id': message.chat.id,
         'thread_id': thread_id
       })
-      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+      with open(
+        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+        'w',
+        encoding = 'utf-8'
+      ) as chat_settings_file:
         json.dump(chat_settings, chat_settings_file)
       bot.send_message(
         message.chat.id,
@@ -99,7 +142,11 @@ def disable_recieve(message):
         'chat_id': message.chat.id,
         'thread_id': thread_id
       })
-      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+      with open(
+        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+        'w',
+        encoding = 'utf-8'
+      ) as chat_settings_file:
         json.dump(chat_settings, chat_settings_file)
       bot.send_message(
         message.chat.id,
@@ -119,13 +166,21 @@ def enable_forward(message):
   thread_id = get_thread_id(message)
   if can_control_bot(message, settings, chat_settings):
     if is_forwarder(message, chat_settings):
-      bot.send_message(message.chat.id, settings['response_messages']['already_in_forwarders'], message_thread_id = thread_id)
+      bot.send_message(
+        message.chat.id,
+        settings['response_messages']['already_in_forwarders'],
+        message_thread_id = thread_id
+      )
     else:
       chat_settings['forwarders'].append({
         'chat_id': message.chat.id,
         'thread_id': thread_id
       })
-      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+      with open(
+        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+        'w',
+        encoding = 'utf-8'
+      ) as chat_settings_file:
         json.dump(chat_settings, chat_settings_file)
       bot.send_message(
         message.chat.id,
@@ -156,7 +211,11 @@ def disable_forward(message):
         'chat_id': message.chat.id,
         'thread_id': thread_id
       })
-      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+      with open(
+        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+        'w',
+        encoding = 'utf-8'
+      ) as chat_settings_file:
         json.dump(chat_settings, chat_settings_file)
       bot.send_message(
         message.chat.id,
@@ -199,7 +258,11 @@ def add_superuser(message):
       )
     else:
       chat_settings['superuser_ids'].append(new_superuser_id)
-      with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+      with open(
+        os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+        'w',
+        encoding = 'utf-8'
+      ) as chat_settings_file:
         json.dump(chat_settings, chat_settings_file)
       bot.send_message(
         message.chat.id,
@@ -243,7 +306,11 @@ def remove_superuser(message):
     else:
       if not is_default_superuser(superuser_to_delete_id, settings):
         chat_settings['superuser_ids'].remove(superuser_to_delete_id)
-        with open(os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json', 'w', encoding = 'utf-8') as chat_settings_file:
+        with open(
+          os.path.dirname(os.path.abspath(__file__)) + '/../conf/chat_settings.json',
+          'w',
+          encoding = 'utf-8'
+        ) as chat_settings_file:
           json.dump(chat_settings, chat_settings_file)
         bot.send_message(
           message.chat.id,
@@ -296,7 +363,11 @@ def forward_message(message):
                 is_big = False
               )
             except:
-              bot.send_message(message.chat.id, settings['response_messages']['emoji_response_error'], message_thread_id = thread_id)
+              bot.send_message(
+                message.chat.id,
+                settings['response_messages']['emoji_response_error'],
+                message_thread_id = thread_id
+              )
               break
           if settings['response_types']['text']:
             try:
