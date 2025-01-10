@@ -78,6 +78,15 @@ def send_welcome(message):
   )
 
 
+@bot.message_handler(commands=['server_list'])
+def server_list(message):
+  bot.send_message(
+    message.chat.id,
+    settings['response_messages']['server_list'],
+    message_thread_id = get_thread_id(message)
+  )
+
+
 @bot.message_handler(commands=['status'])
 def status(message):
   reciever_status = 'вкл. ⬇️' if is_reciever(message, chat_settings) else 'выкл. ⏸'
