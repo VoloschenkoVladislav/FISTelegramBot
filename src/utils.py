@@ -1,5 +1,6 @@
 import os
 import json
+import re
 
 
 def get_thread_id(message):
@@ -67,3 +68,14 @@ def update_chat_settings(chat_settings):
     encoding = 'utf-8'
   ) as chat_settings_file:
     json.dump(chat_settings, chat_settings_file)
+
+def startswithre(r, string):
+  if (re.search(re.compile(r), string)):
+    r = "^" + r
+    x = re.search(re.compile(r), string)
+    if x :
+      return True
+    else :
+      return False
+  else:
+    return False

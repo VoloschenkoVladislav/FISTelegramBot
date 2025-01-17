@@ -9,7 +9,8 @@ from utils import (
   can_control_bot,
   is_superuser,
   is_default_superuser,
-  update_chat_settings
+  update_chat_settings,
+  startswithre
 )
 
 
@@ -313,7 +314,7 @@ def forward_message(message):
   if is_forwarder(message, chat_settings):
     for chat in chat_settings['recievers']:
       if (
-        message.text.startswith(settings['trigger_tag'])
+        startswithre(settings['trigger_tag'], message.text)
         and (
           message.chat.id == chat['chat_id']
           and thread_id != chat['thread_id']

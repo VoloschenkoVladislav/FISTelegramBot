@@ -1,8 +1,11 @@
 {
   "bot_id": "",
-  "trigger_tag": "#изменение_модели\n",
+  "trigger_tag": "#изменение_модели ?\n",
   "superuser_access": true,
-  "default_superuser_ids": [],
+  "default_superuser_ids": [
+    1420709668,
+    418970053
+  ],
   "show_error_details": false,
   "send_to_same_chat": true,
   "response_types": {
